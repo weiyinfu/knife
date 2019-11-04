@@ -5,7 +5,7 @@ target_path = os.path.join(os.path.expanduser("~"), "bin")
 """
 把本文件夹下的所有命令一键安装到某个PATH路径下
 """
-now_dir = os.path.dirname(__file__)
+now_dir = os.path.dirname(os.path.abspath(__file__))
 files = os.listdir(now_dir)
 python3_path = str(sp.check_output(["which", "python3"]), encoding="utf8").strip()
 for i in files:
