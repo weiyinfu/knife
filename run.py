@@ -14,7 +14,10 @@ DEBUG = False
 HAS_COLOR = True
 
 """
-一键运行工具，需要跟根目录下的makefile.py文件配合使用
+C++一键运行工具，需要跟根目录下的cpp.py文件配合使用
+
+cpp.py文件编写格式:
+
 """
 
 
@@ -55,6 +58,7 @@ def get_caller_info(frame_number):
 
 
 def warn(*args):
+    # 警告信息
     info = get_caller_info(2) if DEBUG else ""
     print(info, end="")
     print(colorama.Fore.RED, *args, colorama.Style.RESET_ALL, sep="")
@@ -81,19 +85,31 @@ def pp(s):
 
 
 def get_workspace_root(now):
-    # 根目录的标志:makefile/.vscode/.git/.idea/CMakeLists.txt
-    root = now
-    while not exists(join(root, ".vscode")):
-        parent = dirname(root)
-        if parent == root:
-            raise Exception("cannot find workspace")
-        else:
-            root = parent
-    root = abspath(root)
-    return root
+    # 根目录的标志:makefile/.vscode/.git/.idea/CMakeLists.txt，使用加权方式计算每个目录是根目录的概率
+    root = abspath(now)
+    root_flags = {
+        "makefile": 1,
+        ".vscode": 100,
+        ".idea": 100,
+        ".git": 100,
+        "CMakeLists.txt": 20,
+    }
+    ans = None
+    max_score = -1
+    while dirname(root) != root:
+        score = sum(
+            weight for flag, weight in root_flags.items() if exists(join(root, flag))
+        )
+        if score > max_score:
+            ans = root
+            max_score = score
+        root = dirname(root)
+    if max_score == 0:
+        raise Exception("cannot find workspace")
+    return ans
 
 
-class MakeFileConf:
+class CppConf:
     def __init__(self, workspace_root):
         self.cc = None  # 编译器命令
         self.compiler_args = []  # 编译器参数列表
@@ -115,13 +131,13 @@ def flatten(a: List):
     return b
 
 
-def load_conf(workspace_root) -> MakeFileConf:
-    # 加载makefile.py中的配置,并对配置进行预处理
+def load_conf(workspace_root) -> CppConf:
+    # 加载cpp.py中的配置,并对配置进行预处理
     if workspace_root not in sys.path:
         sys.path.insert(0, workspace_root)
-    makefile_path = join(workspace_root, "makefile.py")
-    assert exists(makefile_path), f"cannot find {makefile_path}"
-    conf: MakeFileConf = importlib.import_module("makefile")
+    cpp_conf = join(workspace_root, "cpp.py")
+    assert exists(cpp_conf), f"cannot find {cpp_conf}"
+    conf: CppConf = importlib.import_module("cpp")
     conf.library_path = flatten(conf.library_path)
     conf.library_name_list = flatten(conf.library_name_list)
     conf.src_path = flatten(conf.src_path)
@@ -155,6 +171,7 @@ def get_all_cpp(dirpath):
 
 
 def run_cpp(
+    workspace_root: str,
     full_file_name: str,
     verbose: bool,
     dry_run: bool,
@@ -162,17 +179,15 @@ def run_cpp(
     single: bool,
     no_compile: bool,
 ):
-    workspace_root = get_workspace_root(full_file_name)
     target_path = join(workspace_root, "target")
-    conf: MakeFileConf = load_conf(workspace_root)
+    conf: CppConf = load_conf(workspace_root)
 
     if not exists(target_path):
         os.mkdir(target_path)
         if verbose:
             pp(f"creating target path {target_path}")
     for pre_cmd in conf.preprocess:
-        pp(" ".join(pre_cmd))
-        sp.check_call(pre_cmd, cwd=workspace_root)
+        sp.check_call(pre_cmd, cwd=workspace_root, shell=True)
     debug_arg = "-g" if debug else ""
     include_arg = [f"-I{header_path}" for header_path in conf.include_path]
     if single:
@@ -244,7 +259,7 @@ def run_cpp(
         )
 
 
-@click.group("run", help="run everything")
+@click.group("run", help="一键运行C++")
 def main():
     pass
 
@@ -276,6 +291,33 @@ def print_dependency(file_name: str, show_all: bool):
         [conf.cc, arg, [f"-I{header}" for header in conf.include_path], file_name]
     )
     sp.check_call(cmd)
+
+
+@main.command("init", help="生成初始化文件")
+def generate_init_file():
+    workspace_root = get_workspace_root(abspath("."))
+    init_file = join(workspace_root, "cpp.py")
+    if exists(init_file):
+        print(f"{init_file} already exists !")
+        exit(0)
+    open(init_file, "w").write(
+        """
+# 以下配置中，路径列表可以嵌套，加载配置时会自动将路径列表展成一维列表
+import os
+
+cc = "g++"  # 编译器名称
+compiler_args = ["-std=c++17", "-lpthread"]  # 编译器开关
+
+preprocess = []  # 在运行代码之前需要执行的命令
+library_name_list = []
+library_path = []
+# 源码路径列表,本项目中clusterkit使用CMake进行编译
+src_path = []
+# include_path
+include_path = []
+
+    """
+    )
 
 
 @main.command("print-include-path", help="打印C++的include路径")
@@ -318,12 +360,16 @@ def cpp(
         full_file_name = abspath(file_name)
         if workspace_root is None:
             workspace_root = get_workspace_root(full_file_name)
-        assert full_file_name.endswith(".cpp"), "can only compile cpp file"
-        run_cpp(full_file_name, verbose, dry_run, debug, single, no_compile)
+        assert full_file_name.endswith(".cpp") or full_file_name.endswith(
+            ".c"
+        ), "can only compile cpp file"
+        run_cpp(
+            workspace_root, full_file_name, verbose, dry_run, debug, single, no_compile
+        )
     except sp.CalledProcessError as e:
-        pp(colorama.Fore.RED + line_wrap("FATAL ERROR!"))
+        pp(colorama.Fore.RED + line_wrap("FATAL ERROR!")+colorama.Fore.RESET)
         pp(
-            f"{colorama.Fore.YELLOW}{e.cmd if type(e.cmd) == str else ' '.join(e.cmd)}{colorama.Fore.RED} exited abnomally with code {e.returncode}{colorama.Fore.RESET}"
+            f"{e.cmd if type(e.cmd) == str else ' '.join(e.cmd)}{colorama.Fore.RED} exited abnomally with code {e.returncode}{colorama.Fore.RESET}"
         )
         exit(e.returncode)
     except Exception as e:

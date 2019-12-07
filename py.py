@@ -10,7 +10,7 @@ python命令运行一个单文件时，这个单文件可能位于某个包下
 
 
 def get_python_root(now: str):
-    # 获取python路径
+    # 获取python路径，一直向上级目录寻找，直到找不到__init__文件为止
     if isfile(now):
         now = dirname(now)
     while exists(join(now, "__init__.py")):
@@ -45,4 +45,8 @@ cmd = sys.argv
 cmd[0] = "python3"
 env = os.environ
 env["PYTHONPATH"] = python_path
-sp.check_call(cmd, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, env=env)
+# 如果抛出异常，不要进一步打印异常
+try:
+    sp.check_call(cmd, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, env=env)
+except:
+    pass
