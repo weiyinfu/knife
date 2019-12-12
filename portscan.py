@@ -24,7 +24,7 @@ def sigint_handler(signum, frame):
 signal.signal(signal.SIGINT, sigint_handler)
 signal.signal(signal.SIGTERM, sigint_handler)
 
-init_thread_count = 300
+init_thread_count = 10
 total_count = 1 << 16
 a = [False] * total_count  # 端口是否检测过
 now_pos = 0  # 当前已经处理了的端口个数

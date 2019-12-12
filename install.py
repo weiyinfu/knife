@@ -4,7 +4,7 @@ import subprocess as sp
 import click
 
 # 把可执行文件安装到此目录
-target_path = os.path.join(os.path.expanduser("~"), "bin")
+target_path = os.path.join(os.path.expanduser("~"), "knife-bin")
 """
 把本文件夹下的所有命令一键安装到某个PATH路径下
 
@@ -13,7 +13,13 @@ target_path = os.path.join(os.path.expanduser("~"), "bin")
 * 以Python方式安装，这种方式的好处是可以修改knife源码
 """
 
-
+if not os.path.exists(target_path):
+    res = input(f"do you like to create folder {target_path}? y/n")
+    if res.lower().strip() == "y":
+        os.mkdir(target_path)
+    else:
+        print("do nothing")
+        exit(-1)
 python3_path = str(sp.check_output(["which", "python3"]), encoding="utf8").strip()
 
 

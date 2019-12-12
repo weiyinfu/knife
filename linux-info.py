@@ -1,27 +1,95 @@
 """
 一个命令生成linux信息
 """
+import math
+import re
 import subprocess
-from pprint import pprint
 
 import click
+import psutil
+import tabulate
 
 
 def pack_comand(cmd: str):
+    # 运行命令并对结果进行一定的处理
     res = None
     try:
         res = subprocess.check_output(cmd, shell=True)
         res = str(res, encoding="utf8").strip()
+        res = res.replace("\\n", "").replace("\\l", "").strip()
         return res
     except:
-        return res
+        return None
 
 
+# 查看系统信息
+uname = [
+    ("uname --kernel-name", "内核名称"),
+    ("uname --nodename", "主机名称"),
+    ("uname --kernel-release", "内核发行号"),
+    ("uname --kernel-version", "安装日期"),
+    ("uname --machine", "机器硬件名称"),
+    ("uname --processor", "处理器类型"),
+    ("uname --operating-system", "操作系统"),
+    ("uname --hardware-platform", "硬件平台"),
+    ("head -n 1 /etc/issue", "操作系统发行版"),
+    ("hostname", "计算机名称"),
+    ("whoami", "用户名称"),
+    ("uptime --since", "开机时间"),
+    ("hostname -I", "IP地址"),
+]
+
+plain = [(desc, pack_comand(cmd)) for cmd, desc in uname]  # 无需运行，直接展示
+
+
+def get_screen():
+    # 屏幕分辨率
+    info = pack_comand("xrandr")
+    resolution = re.search("current (\d+ x \d+)", info).group(1)
+    screen_size = re.search("\d+mm x \d+mm", info).group(0)
+    return resolution, screen_size
+
+
+resolution, screen_size = get_screen()
+plain.extend([("=====", "======"), ("屏幕分辨率", resolution), ("屏幕尺寸", screen_size)])
+
+# psutil系列
+plain.extend(
+    [
+        ("=======", "========"),
+        ("物理CPU个数", psutil.cpu_count()),
+        ("逻辑CPU个数", psutil.cpu_count(logical=True)),
+        ("CPU使用率", psutil.cpu_percent()),
+        ("进程数", len(psutil.pids())),
+    ]
+)
+
+
+def human_size(sz):
+    x = ["B", "k", "M", "G"]
+    ind = int(math.log(sz, 1024))
+    return f"{sz / (1024 ** ind):.3f} {x[ind]}"
+
+
+virtual_memory = psutil.virtual_memory()
+plain.extend(
+    (
+        ("====内存信息", "======="),
+        ("总大小", human_size(virtual_memory.total),),
+        ("已用", human_size(virtual_memory.used)),
+        ("已用百分比", f"{virtual_memory.percent:.1f}%"),
+    )
+)
+net_io = psutil.net_io_counters()
+plain.extend(
+    (
+        ("=====网络", "====="),
+        ("已发送", human_size(net_io.bytes_sent)),
+        ("已接受", human_size(net_io.bytes_recv)),
+    )
+)
 command_list = [
-    ("uname -a", "查看内核"),
-    ("head -n 1 /etc/issue", "查看操作系统版本"),
     ("cat /proc/cpuinfo", "查看CPU信息"),
-    ("hostname", "查看计算机名称"),
     ("du ./ --max-depth=1 -h  2>/dev/null", "家目录大小"),
     ("lspci -tv", "列出全部PCI设备"),
     ("lsusb -tv", "列出全部usb设备"),
@@ -36,7 +104,6 @@ command_list = [
     ("mount | column -t", "查看挂接的分区状态"),
     ("fdisk -l 2>/dev/null", "查看所有分区"),
     ("swapon -s", "查看所有交换分区"),
-    # ("hdparm -i /dev/hda", "查看磁盘参数"),
     ("dmesg | grep IDE", "查看启动时IDE设备检测状况网络"),
     ("cat /proc/version", "查看内核版本"),
     ("ifconfig", "查看所有网络接口的属性"),
@@ -76,11 +143,7 @@ redhat = [("rpm -qa", "查看所有安装的软件包)"), ("cat /etc/redhat-rele
 
 @click.command("linux-info")
 def linuxInfo():
-    for i, j in command_list:
-        print(i)
-        print(j)
-        print("=" * 20)
-        pprint(pack_comand(i))
+    print(tabulate.tabulate(plain))
 
 
 if __name__ == "__main__":

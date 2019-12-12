@@ -1,6 +1,9 @@
 import os
 import re
 
+"""
+使用python写步骤类的的程序时，重命名大量程序
+"""
 d = os.path.abspath(os.path.curdir)
 now = 1
 
