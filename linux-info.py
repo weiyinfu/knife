@@ -61,6 +61,7 @@ plain.extend(
         ("逻辑CPU个数", psutil.cpu_count(logical=True)),
         ("CPU使用率", psutil.cpu_percent()),
         ("进程数", len(psutil.pids())),
+        ("电量",pack_comand("cat `find /sys/devices -name capacity`")+"%")
     ]
 )
 

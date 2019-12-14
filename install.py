@@ -57,7 +57,7 @@ def install_soft():
 
 
 @click.command("install")
-@click.option("-s", "--soft", is_flag=True, default=False, help="是否使用shell方式安装")
+@click.option("-s", "--soft", is_flag=True, default=True, help="是否使用shell方式安装")
 @click.option("--dry-run", is_flag=True, default=False, help="打印可用的工具，并不安装")
 def main(soft: bool, dry_run: bool):
     if dry_run:
