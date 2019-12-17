@@ -8,6 +8,7 @@ import json
 import os
 import sys
 import pyquery as pq
+import re
 
 
 def trim(node):
@@ -32,6 +33,9 @@ def json2bookmark(node):
     def handle(node):
         if not "children" in node:
             # 如果是叶子节点
+            if not re.match("^\w+://", node["url"]):
+                print(f"url should be absolute path but now is {node['url']}")
+                exit(-1)
             return f"<DT><A HREF=\"{node['url']}\">{node['label']}</A>\n"
         s = "".join(map(handle, node["children"]))
         return f"<DT><H3>{node['label']}</H3>\n<DL>\n{s}\n</DL>\n"
@@ -50,6 +54,9 @@ def bookmark2json(html_file):
     stack = [[{"label": "root"}]]
     while i < len(lines):
         line = lines[i].strip()
+        if not line:
+            i+=1
+            continue
         if line.startswith("<DL>"):
             stack.append([])
         elif line.startswith("<DT>"):
@@ -65,7 +72,7 @@ def bookmark2json(html_file):
         else:
             assert False, f"error line {line}"
         i += 1
-    return stack[0]
+    return stack[0][0]
 
 
 def main():
