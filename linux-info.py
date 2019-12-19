@@ -53,7 +53,7 @@ def get_screen():
 resolution, screen_size = get_screen()
 plain.extend([("=====", "======"), ("屏幕分辨率", resolution), ("屏幕尺寸", screen_size)])
 
-# psutil系列
+# psutil系列：利用psutil包获取系统信息
 plain.extend(
     [
         ("=======", "========"),
@@ -61,13 +61,13 @@ plain.extend(
         ("逻辑CPU个数", psutil.cpu_count(logical=True)),
         ("CPU使用率", psutil.cpu_percent()),
         ("进程数", len(psutil.pids())),
-        ("电量",pack_comand("cat `find /sys/devices -name capacity`")+"%")
+        ("电量", pack_comand("cat `find /sys/devices -name capacity`") + "%"),
     ]
 )
 
 
 def human_size(sz):
-    x = ["B", "k", "M", "G"]
+    x = ["B", "k", "M", "G", "T"]
     ind = int(math.log(sz, 1024))
     return f"{sz / (1024 ** ind):.3f} {x[ind]}"
 
@@ -89,6 +89,8 @@ plain.extend(
         ("已接受", human_size(net_io.bytes_recv)),
     )
 )
+
+#########以下命令不再执行
 command_list = [
     ("cat /proc/cpuinfo", "查看CPU信息"),
     ("du ./ --max-depth=1 -h  2>/dev/null", "家目录大小"),

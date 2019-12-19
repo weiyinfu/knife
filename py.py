@@ -5,7 +5,7 @@ from os.path import *
 from os.path import abspath, dirname, exists, join
 
 """
-python命令运行一个单文件时，这个单文件可能位于某个包下
+python命令运行一个单文件时，这个单文件可能位于某个包下，所以运行之前需要更改PYTHONPATH
 """
 
 
@@ -46,7 +46,4 @@ cmd[0] = "python3"
 env = os.environ
 env["PYTHONPATH"] = python_path
 # 如果抛出异常，不要进一步打印异常
-try:
-    sp.check_call(cmd, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, env=env)
-except:
-    pass
+sp.check_call(cmd, stdin=sys.stdin, stdout=sys.stdout, stderr=sys.stderr, env=env)

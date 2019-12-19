@@ -1,12 +1,11 @@
 """
-查看端口占用情况，兼容windows和linux的终极程序
+查看端口占用情况，打印端口信息
 """
 import socket
 import subprocess as sp
 
 import click
 import psutil
-from tabulate import tabulate
 
 
 def is_port_open(ip: str, port: int):
@@ -37,12 +36,13 @@ def main(port):
         exit(0)
     pid = get_process_id_by_port(port)
     p = psutil.Process(pid)
-    data = [
-        ("pid", pid),
-        ("cmd", " ".join(p.cmdline())),
-        ("cpu", p.cpu_percent()),
-    ]
-    print(tabulate(data))
+    print(
+        f"""port:{port}
+pid:{pid}
+cpu:{p.cpu_percent()}
+cmd:{" ".join(p.cmdline())}
+"""
+    )
 
 
 if __name__ == "__main__":

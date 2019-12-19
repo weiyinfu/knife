@@ -3,6 +3,9 @@ import os
 
 import tabulate
 
+"""
+linux下查看CPU温度
+"""
 files = glob.glob("/sys/class/hwmon/hwmon0/device/hwmon/hwmon0/temp*")
 
 a = [

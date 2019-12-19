@@ -10,15 +10,15 @@ from typing import List
 import click
 import colorama
 
-DEBUG = False
-HAS_COLOR = True
-
 """
 C++一键运行工具，需要跟根目录下的cpp.py文件配合使用
 
 cpp.py文件编写格式:
 
 """
+
+DEBUG = False
+HAS_COLOR = True
 
 
 def get_window_size():
@@ -39,28 +39,8 @@ def get_window_size():
         return default_window_size
 
 
-def get_caller_info(frame_number):
-    # 带行号的打印
-    def findCaller():
-        f = sys._getframe(frame_number)
-        if f is not None:
-            f = f.f_back
-        co = f.f_code
-        return co.co_filename, f.f_lineno, co.co_name
-
-    file, line, func = findCaller()
-    file = os.path.relpath(file, os.curdir)
-    if func != "<module>":
-        info = "%s:%s(%s)" % (file, line, func)
-    else:
-        info = "%s:%s" % (file, line)
-    return info
-
-
 def warn(*args):
     # 警告信息
-    info = get_caller_info(2) if DEBUG else ""
-    print(info, end="")
     print(colorama.Fore.RED, *args, colorama.Style.RESET_ALL, sep="")
 
 
@@ -78,10 +58,9 @@ def line_wrap(s):
 
 def pp(s):
     # 控制台输出统一调用此函数
-    line_info = get_caller_info(2) if DEBUG else ""
     if not HAS_COLOR:
         s = remove_control_chars(s)
-    print(line_info + s, flush=True)
+    print(s, flush=True)
 
 
 def get_workspace_root(now):
@@ -110,8 +89,8 @@ def get_workspace_root(now):
 
 
 class CppConf:
-    def __init__(self, workspace_root):
-        self.cc = None  # 编译器命令
+    def __init__(self):
+        self.cxx = None  # 编译器命令
         self.compiler_args = []  # 编译器参数列表
         self.preprocess = []  # 预处理的命令列表
         self.library_name_list = []  # 动态链接库的名字列表
@@ -200,10 +179,10 @@ def run_cpp(
     lib_name_arg = [f"-l{lib_name}" for lib_name in conf.library_name_list]
     exe_file_arg = join(target_path, splitext(basename(full_file_name))[0] + ".exe")
     if debug:
-        conf.cc = "g++"
+        conf.cxx = "g++"
     cmd = flatten(
         [
-            conf.cc,
+            conf.cxx,
             debug_arg,
             conf.compiler_args,
             include_arg,
@@ -216,7 +195,7 @@ def run_cpp(
     cmd = [c for c in cmd if c]
     cmd_with_color = flatten(
         [
-            conf.cc,
+            conf.cxx,
             debug_arg,
             colorama.Fore.LIGHTBLUE_EX,
             conf.compiler_args,
@@ -288,7 +267,7 @@ def print_dependency(file_name: str, show_all: bool):
     conf = load_conf(workspace_root)
     arg = "-M" if show_all else "-MM"
     cmd = flatten(
-        [conf.cc, arg, [f"-I{header}" for header in conf.include_path], file_name]
+        [conf.cxx, arg, [f"-I{header}" for header in conf.include_path], file_name]
     )
     sp.check_call(cmd)
 
@@ -367,7 +346,7 @@ def cpp(
             workspace_root, full_file_name, verbose, dry_run, debug, single, no_compile
         )
     except sp.CalledProcessError as e:
-        pp(colorama.Fore.RED + line_wrap("FATAL ERROR!")+colorama.Fore.RESET)
+        pp(colorama.Fore.RED + line_wrap("FATAL ERROR!") + colorama.Fore.RESET)
         pp(
             f"{e.cmd if type(e.cmd) == str else ' '.join(e.cmd)}{colorama.Fore.RED} exited abnomally with code {e.returncode}{colorama.Fore.RESET}"
         )

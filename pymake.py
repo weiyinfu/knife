@@ -30,10 +30,10 @@ ls
 \"\"\",
 "shell": True
 }
-
-
+在命令中可以使用宏：
+* WORKSPACE_ROOT
+* CURRENT_DIR
 """
-
 WORKSPACE_ROOT = "${WORKSPACE_ROOT}"
 CURRENT_DIR = "${CURRENT_DIR}"
 
@@ -66,6 +66,7 @@ def get_workspace_root(now):
 
 
 def rewrite(macros: Dict[str, str], cmd: str):
+    # 利用宏重写cmd
     for k, v in macros.items():
         if k in cmd:
             cmd = cmd.replace(k, v)
@@ -76,29 +77,18 @@ def rewrite(macros: Dict[str, str], cmd: str):
 @click.argument("target")
 def main(target: str):
     workspace_root = get_workspace_root(abspath("."))
-    sys.path = [workspace_root] + sys.path
     if not exists(join(workspace_root, "makefile.py")):
         sys.stderr.write("no makefile.py in workspace root !")
         exit(-1)
+    sys.path = [workspace_root] + sys.path  # 为了加载makefile.py需要更改sys.path
     makefile = importlib.import_module("makefile")
     if not hasattr(makefile, target):
         sys.stderr.write(f"找不到名为{target}的target")
         exit(-1)
     cmd = getattr(makefile, target)
-    if type(cmd) == str:
-        cmd_list = [cmd]
-    elif type(cmd) == list:
-        cmd_list = cmd
-    else:
-        assert False, "unkown type %s" % (type(cmd))
     macros = {WORKSPACE_ROOT: workspace_root, CURRENT_DIR: abspath(curdir)}
-    for cmd in cmd_list:
-        if type(cmd) == str and not exists(cmd):
-            cmd = cmd.split()
-        if type(cmd) == list:
-            cmd = [rewrite(macros, i) for i in cmd]
-        print(cmd)
-        sp.check_call(cmd, cwd=workspace_root)
+    cmd = rewrite(macros, cmd)
+    sp.check_call(cmd, cwd=workspace_root, shell=True)
 
 
 if __name__ == "__main__":

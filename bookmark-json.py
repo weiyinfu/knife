@@ -1,7 +1,7 @@
 """
 chrome书签文件和json互相转换
 chrome 书签加载器
-把html形式的书签列表解析为JSON，JSON包括三个字段：label，children，url，其中url和children不能同时存在
+把类html形式的书签列表解析为JSON，JSON包括三个字段：label，children，url，其中url和children不能同时存在，有label和url的object表示叶子节点，有label和children的object表示目录节点
 把JSON转换成chrome能识别的HTML格式
 """
 import json

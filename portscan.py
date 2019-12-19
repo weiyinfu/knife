@@ -5,7 +5,7 @@ import threading
 import time
 
 """
-端口扫描工具
+端口扫描工具：判断哪些端口是开放的
 线程数动态增加，直到无法带来更多收益为止
 每次线程数增加delta个，如果赚了delta加倍；如果赔了，delta减半
 """
@@ -24,8 +24,8 @@ def sigint_handler(signum, frame):
 signal.signal(signal.SIGINT, sigint_handler)
 signal.signal(signal.SIGTERM, sigint_handler)
 
-init_thread_count = 10
-total_count = 1 << 16
+init_thread_count = 10  # 初始线程数
+total_count = 1 << 16  # 扫描的进程范围
 a = [False] * total_count  # 端口是否检测过
 now_pos = 0  # 当前已经处理了的端口个数
 workers = []  # 全部worker集合
