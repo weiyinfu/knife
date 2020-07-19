@@ -42,7 +42,7 @@ for i in path_list:
     uniq_path_list.append(i)
 python_path = os.pathsep.join(uniq_path_list)
 cmd = sys.argv
-cmd[0] = "python3"
+cmd[0] = sys.executable
 env = os.environ
 env["PYTHONPATH"] = python_path
 # 如果抛出异常，不要进一步打印异常

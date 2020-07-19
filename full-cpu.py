@@ -1,7 +1,8 @@
+import multiprocessing as mp
+
 """
 把cpu占满，测试CPU性能，检查cpu是否完好
 """
-import multiprocessing as mp
 
 
 def run():

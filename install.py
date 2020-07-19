@@ -64,6 +64,7 @@ def main(soft: bool, dry_run: bool):
         for src_path, cmd, target in cmd_iterator():
             print(f"{cmd}:{src_path}->{target}")
         return
+    soft=True
     install_soft() if soft else install()
 
 

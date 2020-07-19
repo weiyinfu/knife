@@ -44,10 +44,13 @@ plain = [(desc, pack_comand(cmd)) for cmd, desc in uname]  # 无需运行，直�
 
 def get_screen():
     # 屏幕分辨率
-    info = pack_comand("xrandr")
-    resolution = re.search("current (\d+ x \d+)", info).group(1)
-    screen_size = re.search("\d+mm x \d+mm", info).group(0)
-    return resolution, screen_size
+    try:
+        info = pack_comand("xrandr")
+        resolution = re.search("current (\d+ x \d+)", info).group(1)
+        screen_size = re.search("\d+mm x \d+mm", info).group(0)
+        return resolution, screen_size
+    except:
+        return "", ""
 
 
 resolution, screen_size = get_screen()
