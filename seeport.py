@@ -28,6 +28,14 @@ def get_process_id_by_port(port: int):
     return int(pid)
 
 
+def get_processes_of_port(port: int):
+    res = sp.check_output(f"lsof -i:{port}", shell=True)
+    lines = res.splitlines()
+    pids = [lines[i].split()[1] for i in range(1, len(lines))]
+    pids = [int(i) for i in pids]
+    return pids
+
+
 @click.command("seeport")
 @click.argument("port", nargs=1, type=int)
 def main(port):
@@ -41,6 +49,11 @@ def main(port):
 pid:{pid}
 cpu:{p.cpu_percent()}
 cmd:{" ".join(p.cmdline())}
+username:{p.username()}
+name:{p.name()}
+numthreads:{p.num_threads()}
+cwd:{p.cwd()}
+num_fds:{p.num_fds()}
 """
     )
 

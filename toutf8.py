@@ -5,7 +5,7 @@ import os
 import sys
 
 import chardet
-from tqdm import tqdm
+from tqdm.autonotebook import tqdm
 
 bad = []  # 转换失败的
 transformed = []  # 转换成功的

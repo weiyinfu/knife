@@ -46,7 +46,7 @@ def json2bookmark(node):
 
 def bookmark2json(html_file):
     if not os.path.exists(html_file):
-        raise Error(f"{html_file}不存在")
+        raise Exception(f"{html_file}不存在")
     lines = open(html_file, encoding="utf8").readlines()
     i = 0
     while not lines[i].strip().startswith("<DL>"):
@@ -55,12 +55,12 @@ def bookmark2json(html_file):
     while i < len(lines):
         line = lines[i].strip()
         if not line:
-            i+=1
+            i += 1
             continue
         if line.startswith("<DL>"):
             stack.append([])
         elif line.startswith("<DT>"):
-            line = line[len("<DT>") :]
+            line = line[len("<DT>"):]
             ele = pq.PyQuery(line)
             it = {"label": ele.text()}
             if "HREF=" in line:
@@ -98,7 +98,7 @@ def main():
             print(f"{target_name} already exits !")
             exit(-1)
         json.dump(
-            node, open(target_name, "w", encoding="utf8"), ensure_ascii=0, indent=2
+            node, open(target_name, "w", encoding="utf8"), ensure_ascii=False, indent=2
         )
     else:
         print(f"{filename} must be one of .json or .html")

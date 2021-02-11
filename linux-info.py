@@ -1,5 +1,5 @@
 """
-一个命令生成linux信息
+一个命令生成linux机器信息
 """
 import math
 import re

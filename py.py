@@ -23,6 +23,7 @@ def get_python_root(now: str):
 
 
 if len(sys.argv) == 1:
+    print(f"using {sys.executable} as python")
     print("请指明参数名称")
     exit(-1)
 file_name = sys.argv[1]

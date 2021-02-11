@@ -1,14 +1,16 @@
-import requests
-import sys
-from pyquery import PyQuery
-from typing import List
-import re
 import os
-from tqdm import tqdm
-from requests.utils import unquote
+import re
+import sys
+from urllib.parse import unquote
+
+import requests
+from pyquery import PyQuery
+from tqdm.autonotebook import tqdm
+
 """
 从Github上下载文件夹，因为raw github不可用，导致这个工具用途不大
 """
+
 
 def join(parent: str, son: str):
     if son.startswith("http://") or son.startswith("https://"):
